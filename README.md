@@ -13,7 +13,7 @@ This tool can predict long-range RNA-RNA interaction between any two or more RNA
 * [Miniconda3](https://docs.conda.io/en/latest/miniconda)
 * [VARNA 3.93](http://varna.lri.fr/)
 * [Bokeh 1.3.1](https://docs.bokeh.org/en/2.2.1/docs/installation.html)
-* [Circos 0.69.6](http://circos.ca/software/download/)
+* [Circos 0.69.8](http://circos.ca/software/download/)
 * [matplotlib 3.3.1](https://matplotlib.org/users/installing.html)
 * [pandas 1.1.2](https://pandas.pydata.org/getting_started.html)
 * [Inkscape 0.92](https://inkscape.org/en/)
@@ -31,7 +31,7 @@ conda install -c conda-forge numpy=1.19.1
 conda install -c conda-forge bokeh=1.3.1
 conda install -c conda-forge matplotlib=3.3.1
 conda install -c conda-forge pandas=1.1.2
-conda install -c bioconda circos 
+conda install -c bioconda circos=0.69.8 
 ```
 
 ## Examples

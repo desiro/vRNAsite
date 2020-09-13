@@ -160,7 +160,7 @@ description
 
 --varnaPdf,-vrd
     use this Inkscape path to create pdf files; example: inkscape
-    (default: inkscape)
+    (default: )
 
 ################################################################
 
@@ -268,10 +268,13 @@ from math import ceil, floor, log
 from subprocess import Popen, PIPE, call
 from random import seed, randint
 
-import multiprocessingPickle4
-import multiprocessing as mp
-ctx = mp.get_context()
-ctx.reducer = multiprocessingPickle4.MultiprocessingPickle4()
+try:
+    import multiprocessingPickle4
+    import multiprocessing as mp
+    ctx = mp.get_context()
+    ctx.reducer = multiprocessingPickle4.MultiprocessingPickle4()
+except:
+    import multiprocessing as mp
 
 # plotting
 import matplotlib

@@ -12,7 +12,6 @@ vRNAsite.py 0.0.1 (alpha)
 
 ## dependencies
 ```python v3.7.1```, ```numpy v1.16.4```, ```pandas v1.1.2```, ```bokeh v1.3.1```, ```ViennaRNA v2.4.13```, ```matplotlib v3.3.1```, ```VARNA v3.93```, ```circos v0.69.8```
-```
 
 ## description
 ```vRNAsite``` can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```.

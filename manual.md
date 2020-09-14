@@ -1,31 +1,5 @@
 # vRNAsite - manual
 
-## Mandatory Prerequisites
-
-* [python 3.7.1](https://www.python.org/downloads/release/python-385/)
-* [viennaRNA 2.4.13](https://www.tbi.univie.ac.at/RNA/documentation.html#install)
-* [numpy 1.16.4](http://www.numpy.org/)
-
-## Optional Prerequisites
-
-* [Miniconda3](https://docs.conda.io/en/latest/miniconda)
-* [VARNA 3.93](http://varna.lri.fr/)
-* [Bokeh 1.3.1](https://docs.bokeh.org/en/2.2.1/docs/installation.html)
-* [Circos 0.69.8](http://circos.ca/software/download/)
-* [matplotlib 3.3.1](https://matplotlib.org/users/installing.html)
-* [pandas 1.1.2](https://pandas.pydata.org/getting_started.html)
-* [Inkscape 0.92](https://inkscape.org/en/)
-
-
-
-conda install -c bioconda viennarna
-conda install -c conda-forge numpy=1.19.1
-conda install -c conda-forge bokeh=1.3.1
-conda install -c conda-forge matplotlib=3.3.1
-conda install -c conda-forge pandas=1.1.2
-conda install -c bioconda circos=0.69.8 
-```
-
 ## usage
 ```
 vRNAsite.py -fsa <in_vRNAsite_fasta> -pfx <out_prefix> [options]

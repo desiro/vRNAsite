@@ -1,25 +1,25 @@
 # vRNAsite - manual
 
-## usage
+## Usage
 ```
 vRNAsite.py -fsa <in_vRNAsite_fasta> -pfx <out_prefix> [options]
 ```
 
-## version
+## Version
 ```
 vRNAsite.py 0.0.1 (alpha)
 ```
 
-## dependencies
+## Dependencies
 ```python v3.7.1```, ```numpy v1.16.4```, ```pandas v1.1.2```, ```bokeh v1.3.1```, ```ViennaRNA v2.4.13```, ```matplotlib v3.3.1```, ```VARNA v3.93```, ```circos v0.69.8```
 
-## description
+## Description
 ```vRNAsite``` can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```.
 
-## options
-```
-################################################################
+## Options
 
+### Main
+```
 --prefix,-pfx
     output directory and prefix for result files
 
@@ -78,9 +78,10 @@ vRNAsite.py 0.0.1 (alpha)
 --namingExtension,-nex
     use the this parameter as an extension for naming (default: none) 
     (choices: none,peak,mfe,)
+```
 
-################################################################
-
+### SPLASH Data
+```
 --splashData,-spd
     optionally read SPLASH data from SPLASH tables in directory, names have to 
     match the fasta names (default: )
@@ -93,9 +94,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --splashReads,-spr
     set mean minimum read count threshold for SPLASH (default: 0)
+```
 
-################################################################
-
+### IAV Weight Matrix
+```
 --weightMatrix,-wgm
     use weight matrix to consider the relative positioning (default: False)
 
@@ -105,9 +107,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --weightDescent,-dsc
     defines how the weight should descent (default: 0.0)
+```
 
-################################################################
-
+### Watershed Segmentation
+```
 --clusterPeak,-clp
     maximum peak energy for clusters (default: -10.0)
 
@@ -116,9 +119,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --clusterValue,-clv
     sets the cluster extraction value for plotting (default: 1.0)
+```
 
-################################################################
-
+### RNA Structure Prediction
+```
 --candidateDangling,-cdd
     trimming will retain a minimum amount of free bases (default: 2)
 
@@ -137,9 +141,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --candidateMinlen,-cdm
     define minimum length of RNA interaction (default: 8)
+```
 
-################################################################
-
+### VARNA Plots
+```
 --varnaFold,-vrf
     make VARNA plots (default: False)
 
@@ -167,9 +172,10 @@ vRNAsite.py 0.0.1 (alpha)
 --varnaPdf,-vrd
     use this Inkscape path to create pdf files; example: inkscape
     (default: )
+```
 
-################################################################
-
+### Contact Matrix Plots
+```
 --plotHeats,-plh
     plot interaction heat maps (default: False)
 
@@ -193,9 +199,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --plotColor,-plc
     reverse plot color (default: False)
+```
 
-################################################################
-
+### bokeh Plots
+```
 --bokehHeats,-bkh
     enables bokeh printing (default: False)
 
@@ -211,9 +218,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --bokehMax,-bkm
     set maximum bokeh plot energy (default: -10.0)
+```
 
-################################################################
-
+### Peak Distribution Plots
+```
 --distributionPlots,-dsh
     enables peak energy distribution printing (default: False)
 
@@ -222,9 +230,10 @@ vRNAsite.py 0.0.1 (alpha)
 
 --distributionSvg,-dsv
     also plot svg distribution plots (default: False)
+```
 
-################################################################
-
+### Circos Plots
+```
 --circosPlots,-cih
     enables circos printing (default: False)
 
@@ -249,6 +258,4 @@ vRNAsite.py 0.0.1 (alpha)
 --circosRange,-cir
     set circos position plot range; start and end position has to be divided 
     by a minus symbol (default: )
-
-################################################################
 ```

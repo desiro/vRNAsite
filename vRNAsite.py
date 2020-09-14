@@ -3,14 +3,14 @@
 # author: Daniel Desiro'
 script_usage="""
 usage
-    vRNAsite.py -f <in_vRNAsite_fasta> -p <out_prefix> [options]
+    vRNAsite.py -fsa <in_vRNAsite_fasta> -pfx <out_prefix> [options]
 
 version
     vRNAsite.py 0.0.1 (alpha)
 
 dependencies
-    python v3.7.1, numpy v1.16.4, pandas v0.25.0, bokeh v1.3.1, 
-    ViennaRNA v2.4.13, matplotlib v3.1.1, VARNA v3.93
+    python v3.7.1, numpy v1.16.4, pandas v1.1.2, bokeh v1.3.1, 
+    ViennaRNA v2.4.13, matplotlib v3.3.1, VARNA v3.93, circos v0.69.8
 
 description
     Determines potential long-range RNA-RNA interactions between two or more
@@ -156,7 +156,7 @@ description
 
 --varnaPath,-vrp
     use this VARNA path; example: VARNAv3-93.jar 
-    (default: /home/vo54saz/projects/dd_flexible_regions/scripts/VARNAv3-93.jar)
+    (default: VARNAv3-93.jar)
 
 --varnaPdf,-vrd
     use this Inkscape path to create pdf files; example: inkscape

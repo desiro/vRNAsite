@@ -1,6 +1,6 @@
 # vRNAsite
 
-This tool can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```.
+```vRNAsite``` can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```. For command-line options, please refer to the [manual](https://github.com/desiro/vRNAsite/blob/master/manual.md
 
 ## Mandatory Prerequisites
 

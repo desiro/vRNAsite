@@ -1,8 +1,0 @@
-Seg1	Start1	End1	Seg2	Start2	End2	Reads	RPM	dG	i1	j1	i2	j2	RNA	pattern
-5	251	281	6	873	907	23	6514	-13.8	256	280	856	882	UUGUCAAAUGGGAGGUUUCUUUGCA&UGCAGCCAUGCUUUUCCAUCGUGACAA	((((((.(((((((((....(((((&)))))....))))).))))..))))))
-5	667	727	7	347	395	16	4531	-12.3	669	719	349	394	GGCAGGUCCAUACACACAGGCAGGCAGACAAGAUUUGUGAGCAACUGACCC&GGCUCUCAUUGCCUGCACCAUUUGCCUGGCCUGACUAGCAACCUCC	((.((((.........((((((((((((...(...((((.((((.(((.((&))...))))))).)))).).)))))))).)))).......))))))
-2	2046	2078	3	87	123	14	3965	-4.6	2046	2071	99	121	GCUUCCAGGACACAGUCUGUUUGUGC&GCAUUAAGCAAAACCCAGGGAUC	(.((((.((.....((.(((((((((&)))).)))))..)))).)))).)
-Total interactions: 112
-Counted interactions: 112
-Total detected: 131
-Unique detected: 109

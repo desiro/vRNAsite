@@ -60,25 +60,29 @@ description
     disable lonely pairs for RNAcofold (default: False)
 
 --bigGenome,-big
-    use this option for an alternative multiprocessing algorithm for big genomes (default: False)
+    use this option for an alternative multiprocessing algorithm for big 
+    genomes (default: False)
 
 --onlyPlotting,-opl
     only to plotting, requires the candidates.pcl and the matrices.pcl to be
     in the prefix directory (default: False)
 
 --reversePositions,-rvp
-    reverse all positions, useful for negative stranded RNA (default: False)
+    reverse all positions, useful for negative stranded RNA, only affects 
+    plotting and final table  (default: False)
 
 --sequenceLength,-sql
     include the sequence length at the output table (default: False)
 
 --namingExtension,-nex
-    use the this parameter as an extension for naming (default: none) (choices: none,peak,mfe,)
+    use the this parameter as an extension for naming (default: none) 
+    (choices: none,peak,mfe,)
 
 ################################################################
 
 --splashData,-spd
-    optionally read SPLASH data from SPLASH tables in directory, names have to match the fasta names (default: )
+    optionally read SPLASH data from SPLASH tables in directory, names have to 
+    match the fasta names, separated with a minus (default: )
 
 --splashLn,-spn
     use natural logarithm for SPLASH data (default: False)
@@ -144,7 +148,8 @@ description
     also do single sequence VARNA plots (default: False)
 
 --varnaAlgorithm,-vra
-    defines the VARNA drawing algorithm (default: radiate) (choices: line,circular,radiate,naview)
+    defines the VARNA drawing algorithm (default: radiate) 
+    (choices: line,circular,radiate,naview)
 
 --varnaPeakEnergy,-vre
     maximum peak average free energy for a structure to be plotted with VARNA 
@@ -237,7 +242,8 @@ description
     create plots for every segment (default: False)
 
 -circosIntraInter,-cit
-    specify the interaction type which should be shown with circos (default: all) (choices: all,intra,inter)
+    specify the interaction type which should be shown with circos 
+    (default: all) (choices: all,intra,inter)
 
 --circosRange,-cir
     set circos position plot range; start and end position has to be

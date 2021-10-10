@@ -11,7 +11,7 @@ vRNAsite.py 0.0.1 (alpha)
 ```
 
 ## Dependencies
-```python v3.7.1```, ```numpy v1.16.4```, ```pandas v1.1.2```, ```bokeh v1.3.1```, ```ViennaRNA v2.4.13```, ```matplotlib v3.3.1```, ```VARNA v3.93```, ```circos v0.69.8```
+```python v3.7.1```, ```numpy v1.16.4```, ```pandas v1.3.3```, ```bokeh v2.4.0```, ```ViennaRNA v2.4.13```, ```matplotlib v3.4.3```, ```VARNA v3.93```, ```circos v0.69.8```
 
 ## Description
 ```vRNAsite``` can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```.
@@ -24,10 +24,10 @@ vRNAsite.py 0.0.1 (alpha)
     output directory and prefix for result files
 
 --fasta,-fsa
-    fasta file with all mutants; one entry for each RNA from wild-type and all 
-    mutants; will create all possible combinations between mutants and 
-    wild-type; naming: \">name WT\" or \">name mut_name:start-end\"; start and 
-    end defines which part in the WT should be replaced with the mutant string
+    fasta file with all mutants; one entry for each RNA from WT and all
+    mutants; will create all possible combinations between mutants and WT;
+    naming: \">name WT\" or \">name mut_name:start-end\"; start and end
+    defines which part in the WT to be replaced with the mutant string
 
 --reverse,-rev
     creates reverse of each strain if set (default: False)
@@ -62,8 +62,7 @@ vRNAsite.py 0.0.1 (alpha)
     disable lonely pairs for RNAcofold (default: False)
 
 --bigGenome,-big
-    use this option for an alternative multiprocessing algorithm for big 
-    genomes (default: False)
+    use this option for an alternative multiprocessing algorithm for big genomes (default: False)
 
 --onlyPlotting,-opl
     only to plotting, requires the candidates.pcl and the matrices.pcl to be
@@ -72,28 +71,17 @@ vRNAsite.py 0.0.1 (alpha)
 --reversePositions,-rvp
     reverse all positions, useful for negative stranded RNA (default: False)
 
---sequenceLength,-sql
-    include the sequence length at the output table (default: False)
-
 --namingExtension,-nex
-    use the this parameter as an extension for naming (default: none) 
-    (choices: none,peak,mfe,)
+    use the this parameter as an extension for naming (default: none) (choices: none,peak,mfe,)
 ```
 
 ### SPLASH Data
 ```
 --splashData,-spd
-    optionally read SPLASH data from SPLASH tables in directory, names have to 
-    match the fasta names (default: )
-
---splashLn,-spn
-    use natural logarithm for SPLASH data (default: False)
-
---splashLog,-spl
-    set mean minimum read log count threshold for SPLASH (default: 0.0)
+    optionally read SPLASH, SHAPE or similar data from matrices in directory, names have to match the fasta names (default: )
 
 --splashReads,-spr
-    set mean minimum read count threshold for SPLASH (default: 0)
+    set mean minimum threshold for SPLASH, SHAPE or similar data (default: 0.0)
 ```
 
 ### IAV Weight Matrix
@@ -102,11 +90,14 @@ vRNAsite.py 0.0.1 (alpha)
     use weight matrix to consider the relative positioning (default: False)
 
 --weightDistance,-dst
-    distance threshold modifier for links to be in the same area from the 
-    center of their respective RNAs (default: 0.1)
+    distance threshold modifier for links to be in the same area from the center
+    of their respective RNAs (default: 0.1)
 
 --weightDescent,-dsc
     defines how the weight should descent (default: 0.0)
+
+--saveOrientation,-svo
+    also save orientated matrices, this will use up more space (default: False)
 ```
 
 ### Watershed Segmentation
@@ -129,12 +120,8 @@ vRNAsite.py 0.0.1 (alpha)
 --candidateProcesses,-cdp
     turn off multi processing for candidate extraction (default: True)
 
---candidateSingle,-cds
-    disable single strain folds for each candidate (default: True)
-
 --candidateLoad,-cdl
-    load candidates from file to reduce extraction calculations (default: 
-    False)
+    load candidates from file to reduce extraction calculations (default: False)
 
 --candidateCutoff,-cdc
     maximum free energy for a structure to be accepted (default: -10.0)
@@ -155,8 +142,7 @@ vRNAsite.py 0.0.1 (alpha)
     also do single sequence VARNA plots (default: False)
 
 --varnaAlgorithm,-vra
-    defines the VARNA drawing algorithm (default: radiate) (choices: 
-    line,circular,radiate,naview)
+    defines the VARNA drawing algorithm (default: radiate) (choices: line,circular,radiate,naview)
 
 --varnaPeakEnergy,-vre
     maximum peak average free energy for a structure to be plotted with VARNA 
@@ -167,7 +153,8 @@ vRNAsite.py 0.0.1 (alpha)
     (default: -10.0)
 
 --varnaPath,-vrp
-    use this VARNA path; example: VARNAv3-93.jar (default: VARNAv3-93.jar)
+    use this VARNA path; example: VARNAv3-93.jar 
+    (default: VARNAv3-93.jar)
 
 --varnaPdf,-vrd
     use this Inkscape path to create pdf files; example: inkscape
@@ -180,7 +167,7 @@ vRNAsite.py 0.0.1 (alpha)
     plot interaction heat maps (default: False)
 
 --plotProcesses,-plp
-    turn off multi processing for matrix plotting (default: True)
+    turn on multi processing for matrix plotting (default: False)
 
 --plotSize,-pls
     defines the plot size modifier (default: 1.0)
@@ -199,6 +186,9 @@ vRNAsite.py 0.0.1 (alpha)
 
 --plotColor,-plc
     reverse plot color (default: False)
+
+--plotNan,-pln
+    plot nan values, else they will be set to zero (default: False)
 ```
 
 ### bokeh Plots
@@ -252,10 +242,16 @@ vRNAsite.py 0.0.1 (alpha)
     create plots for every segment (default: False)
 
 -circosIntraInter,-cit
-    specify the interaction type which should be shown with circos (default: 
-    all) (choices: all,intra,inter)
+    specify the interaction type which should be shown with circos (default: all) (choices: all,intra,inter)
+
+-circosIntraDist,-cid
+    define the minimum distance of intra circos intreactions (default: 10)
 
 --circosRange,-cir
-    set circos position plot range; start and end position has to be divided 
-    by a minus symbol (default: )
+    set circos position plot range; sequence, start and end position has to be
+    divided by a minus symbol (default: )
+
+--circosMutants,-ciu
+    create mutant circos plots; the mutant segments can be defined by this parameter;
+    sequenes and type have to be separated by a comma, multiple mutants by semicolon (default: )
 ```

@@ -9,8 +9,8 @@ version
     vRNAsite.py 0.0.1 (alpha)
 
 dependencies
-    python v3.7.1, numpy v1.16.4, pandas v1.1.2, bokeh v1.3.1, 
-    ViennaRNA v2.4.13, matplotlib v3.3.1, VARNA v3.93, circos v0.69.8
+    python v3.7.1, numpy v1.20.3, pandas v1.3.3, bokeh v2.4.0, 
+    ViennaRNA v2.4.13, matplotlib v3.4.3, VARNA v3.93, circos v0.69.8
 
 description
     Determines potential long-range RNA-RNA interactions between two or more
@@ -60,38 +60,25 @@ description
     disable lonely pairs for RNAcofold (default: False)
 
 --bigGenome,-big
-    use this option for an alternative multiprocessing algorithm for big 
-    genomes (default: False)
+    use this option for an alternative multiprocessing algorithm for big genomes (default: False)
 
 --onlyPlotting,-opl
     only to plotting, requires the candidates.pcl and the matrices.pcl to be
     in the prefix directory (default: False)
 
 --reversePositions,-rvp
-    reverse all positions, useful for negative stranded RNA, only affects 
-    plotting and final table  (default: False)
-
---sequenceLength,-sql
-    include the sequence length at the output table (default: False)
+    reverse all positions, useful for negative stranded RNA (default: False)
 
 --namingExtension,-nex
-    use the this parameter as an extension for naming (default: none) 
-    (choices: none,peak,mfe,)
+    use the this parameter as an extension for naming (default: none) (choices: none,peak,mfe,)
 
 ################################################################
 
 --splashData,-spd
-    optionally read SPLASH data from SPLASH tables in directory, names have to 
-    match the fasta names, separated with a minus (default: )
-
---splashLn,-spn
-    use natural logarithm for SPLASH data (default: False)
-
---splashLog,-spl
-    set mean minimum read log count threshold for SPLASH (default: 0.0)
+    optionally read SPLASH, SHAPE or similar data from matrices in directory, names have to match the fasta names (default: )
 
 --splashReads,-spr
-    set mean minimum read count threshold for SPLASH (default: 0)
+    set mean minimum threshold for SPLASH, SHAPE or similar data (default: 0.0)
 
 ################################################################
 
@@ -104,6 +91,9 @@ description
 
 --weightDescent,-dsc
     defines how the weight should descent (default: 0.0)
+
+--saveOrientation,-svo
+    also save orientated matrices, this will use up more space (default: False)
 
 ################################################################
 
@@ -123,9 +113,6 @@ description
 
 --candidateProcesses,-cdp
     turn off multi processing for candidate extraction (default: True)
-
---candidateSingle,-cds
-    disable single strain folds for each candidate (default: True)
 
 --candidateLoad,-cdl
     load candidates from file to reduce extraction calculations (default: False)
@@ -148,8 +135,7 @@ description
     also do single sequence VARNA plots (default: False)
 
 --varnaAlgorithm,-vra
-    defines the VARNA drawing algorithm (default: radiate) 
-    (choices: line,circular,radiate,naview)
+    defines the VARNA drawing algorithm (default: radiate) (choices: line,circular,radiate,naview)
 
 --varnaPeakEnergy,-vre
     maximum peak average free energy for a structure to be plotted with VARNA 
@@ -173,7 +159,7 @@ description
     plot interaction heat maps (default: False)
 
 --plotProcesses,-plp
-    turn off multi processing for matrix plotting (default: True)
+    turn on multi processing for matrix plotting (default: False)
 
 --plotSize,-pls
     defines the plot size modifier (default: 1.0)
@@ -192,6 +178,9 @@ description
 
 --plotColor,-plc
     reverse plot color (default: False)
+
+--plotNan,-pln
+    plot nan values, else they will be set to zero (default: False)
 
 ################################################################
 
@@ -242,12 +231,18 @@ description
     create plots for every segment (default: False)
 
 -circosIntraInter,-cit
-    specify the interaction type which should be shown with circos 
-    (default: all) (choices: all,intra,inter)
+    specify the interaction type which should be shown with circos (default: all) (choices: all,intra,inter)
+
+-circosIntraDist,-cid
+    define the minimum distance of intra circos intreactions (default: 10)
 
 --circosRange,-cir
-    set circos position plot range; start and end position has to be
+    set circos position plot range; sequence, start and end position has to be
     divided by a minus symbol (default: )
+
+--circosMutants,-ciu
+    create mutant circos plots; the mutant segments can be defined by this parameter;
+    sequenes and type have to be separated by a comma, multiple mutants by semicolon (default: )
 
 ################################################################
 
@@ -269,8 +264,8 @@ except:
     print("Error: The mandatory library ViennaRNA 2.4 is missing, please read the README.md for more information!")
     exit()
 from itertools import combinations, product, combinations_with_replacement
-from numpy import arange, mean, prod, array, matrix, zeros, ones, nonzero, ones, linspace, transpose, concatenate, flip, full
-from math import ceil, floor, log
+from numpy import arange, mean, median, prod, array, matrix, zeros, ones, nonzero, ones, linspace, transpose, concatenate, flip, full, nan_to_num
+from math import ceil, floor, log, isnan
 from subprocess import Popen, PIPE, call
 from random import seed, randint
 
@@ -382,6 +377,11 @@ def main(opt):
         plotMatrices(heat_dict, "clust_plots", **opt)
         opt["var_plm"] = 1.0
         plotMatrices(heat_dict, "heat_plots", **opt)
+        if splash_dict:
+            plm = opt["var_plm"]
+            opt["var_plm"] = 0
+            plotMatrices(splash_dict, "splash_plots", **opt)
+            opt["var_plm"] = plm
         time_s = getTime(time_s, f"Plot matrices")
     ############################################################################
     if opt["var_bkh"]:
@@ -480,7 +480,7 @@ def readFasta(**opt):
                     if strain != "WT": RNA, strain, mut_dict = createMut(data_dict, mut_dict, name, RNA, strain, **opt)
                     data_dict[(name, strain)] = revComp(RNA, **opt)
                 try:
-                    name, strain = line[1:].split()
+                    name, strain = line[1:].split()[0], line[1:].split()[1]
                 except ValueError: 
                     print(f"Error: \"{line}\" is not in shape \">vRNA# WT\" or \">vRNA# mut_name:start-end\"!")
                     sys.exit()
@@ -515,8 +515,8 @@ def createMut(data_dict, mut_dict, name, RNA, strain, **opt):
     WT_RNA = revComp(WT_RNA, **opt)
     WTlen = len(WT_RNA)
     RNA = WT_RNA[:int(start)-1]+RNA+WT_RNA[int(end):]
-    if opt["var_rev"]: mut_range = (WTlen-int(end), WTlen-int(start))  # reverse position if var_rev
-    else: mut_range = (int(start)-1, int(end)-1)
+    if opt["var_rev"]: mut_range = (WTlen-int(end), WTlen-int(start)+1)  # reverse position if var_rev added +1
+    else: mut_range = (int(start)-1, int(end)) # removed -1
     mut_dict[(name, strain)] = mut_range
     return RNA, strain, mut_dict
 
@@ -559,9 +559,13 @@ def loadData(**opt):
 
 def saveMatrix(heat_dict, splash_dict, **opt):
     ## save data with pickle
+    new_heats = dict()
+    for ((nA,sA),(nB,sB)),lmat in heat_dict.items():
+        if (len(sA.split('-')) > 1 or len(sB.split('-')) > 1) and not opt["var_svo"]: continue
+        new_heats[((nA,sA),(nB,sB))] = lmat
     file = os.path.join(opt["var_pfx"], f"matrices.pcl")
     with open(file, "w+b") as pdat:
-        pickle.dump((heat_dict, splash_dict), pdat , protocol=4)
+        pickle.dump((new_heats, splash_dict), pdat , protocol=4)
 
 def createSnippets(data_dict, **opt):
     ## create sequence snippets
@@ -579,10 +583,12 @@ def combineSnippets(comb_list, data_dict, snip_dict, mut_dict, **opt):
         a_snips, b_snips = snip_dict[nA], snip_dict[nB]
         if nA[1] != "WT":
             m1, m2 = mut_dict[nA]
-            a_snips = [(ai,aj) for ai,aj in a_snips if aj > m1-l and ai <= m2+l]
+            #a_snips = [(ai,aj) for ai,aj in a_snips if aj > m1-l and ai <= m2+l] old
+            a_snips = [(ai,aj) for ai,aj in a_snips if aj >= m1 and ai < m2]
         if nB[1] != "WT":
             m1, m2 = mut_dict[nB]
-            b_snips = [(bi,bj) for bi,bj in b_snips if bj > m1-l and bi <= m2+l]
+            #b_snips = [(bi,bj) for bi,bj in b_snips if bj > m1-l and bi <= m2+l] old
+            b_snips = [(bi,bj) for bi,bj in b_snips if bj >= m1 and bi < m2]
         if nA[1] != "WT" and nB[1] != "WT":
             tuplesA = [(nA,nB,a,b) for a,b in product(a_snips, snip_dict[nB])]
             tuplesB = [(nA,nB,a,b) for a,b in product(snip_dict[nA], b_snips)]
@@ -797,25 +803,32 @@ def mutateMatrices(heat_dict, mut_dict, comb_list, **opt):
 
 def orientateMatrices(heat_dict, comb_list, **opt):
     ## create IAV orientation matrices
+    var_pfx = opt["var_pfx"]
+    opt["var_pfx"] = os.path.join(var_pfx, "weight_matrices")
+    makeDir(**opt)
     orient_dict = dict() ## add pool
-    for ((nA,sA),(nB,sB)),lmat in heat_dict.items():
-        wg_name = (((nA,f"{sA.split('-')[0]}-U"), (nB,f"{sB.split('-')[0]}-U")),
-                   ((nA,f"{sA.split('-')[0]}-R"), (nB,f"{sB.split('-')[0]}-R")),
-                   ((nA,f"{sA.split('-')[0]}-U"), (nB,f"{sB.split('-')[0]}-R")),
-                   ((nA,f"{sA.split('-')[0]}-R"), (nB,f"{sB.split('-')[0]}-U")))
-        #skip = False
-        #for name in wg_name:
-        #    if name in heat_dict.keys():
-        #        skip = True
-        #if skip:
-        #    continue
-        wg_mats = createWeight(lmat, **opt)
-        for name,wgmat in zip(wg_name, wg_mats):
-            orient_dict[name] = lmat * wgmat
-    heat_dict = {**heat_dict, **orient_dict}
-    return heat_dict
+    with open("/home/vo54saz/projects/test_vsite.tsv", "w") as testx:
+        testx.write(f"nA\tsA\tnB\tsB\tA_n\tA_m\tUU_n\tUU_m\tRR_n\tRR_m\tUR_n\tUR_m\tRU_n\tRU_m\n")
+        for ((nA,sA),(nB,sB)),lmat in heat_dict.items():
+            #testx.write(f"{sA}\t{len(sA.split('-'))}\t{sB}\t{len(sA.split('-'))}\n")
+            if len(sA.split('-')) > 1 or len(sB.split('-')) > 1: continue
+            wg_name = (((nA,f"{sA.split('-')[0]}-U"), (nB,f"{sB.split('-')[0]}-U")),
+                       ((nA,f"{sA.split('-')[0]}-R"), (nB,f"{sB.split('-')[0]}-R")),
+                       ((nA,f"{sA.split('-')[0]}-U"), (nB,f"{sB.split('-')[0]}-R")),
+                       ((nA,f"{sA.split('-')[0]}-R"), (nB,f"{sB.split('-')[0]}-U")))
+            wg_mats = createWeight(lmat, nA, sA, nB, sB, **opt)
+            orient_dict[((nA,sA),(nB,sB))] = lmat
+            n, m = lmat.shape
+            testx.write(f"{nA}\t{sA}\t{nB}\t{sB}\t{n}\t{m}")
+            for name,wgmat in zip(wg_name, wg_mats):
+                n, m = wgmat.shape
+                testx.write(f"\t{n}\t{m}")
+                orient_dict[name] = lmat * wgmat
+            testx.write(f"\n")
+    opt["var_pfx"] = var_pfx
+    return orient_dict
 
-def createWeight(lmat, **opt):
+def createWeight(lmat, nA, sA, nB, sB, **opt):
     ################################################################################
     ## create weight matrix
     n, m = lmat.shape
@@ -852,6 +865,11 @@ def createWeight(lmat, **opt):
     ABCD = {f"{i}{j}":concatenate((ABCD[i],ABCD[j][m05-m04:]), axis=0) for i,j in abcd}
     abcd = [("AB","CD"), ("DC","BA"), ("BA","DC"), ("CD","AB")]
     ABCD = [transpose(concatenate((ABCD[i],array([w[n05-n04:] for w in ABCD[j]])), axis=1)) for i,j in abcd]
+    if opt["var_plh"]:
+        plotMatricesMulti(ABCD[0], os.path.join(opt["var_pfx"], f"wgm_{nA}-{sA}_{nB}-{sB}_1"), f"{nA}-{sA}", f"{nB}-{sB}", ABCD[0].max(), opt) #UU
+        plotMatricesMulti(ABCD[1], os.path.join(opt["var_pfx"], f"wgm_{nA}-{sA}_{nB}-{sB}_2"), f"{nA}-{sA}", f"{nB}-{sB}", ABCD[1].max(), opt) #RR
+        plotMatricesMulti(ABCD[2], os.path.join(opt["var_pfx"], f"wgm_{nA}-{sA}_{nB}-{sB}_3"), f"{nA}-{sA}", f"{nB}-{sB}", ABCD[2].max(), opt) #sUlR
+        plotMatricesMulti(ABCD[3], os.path.join(opt["var_pfx"], f"wgm_{nA}-{sA}_{nB}-{sB}_4"), f"{nA}-{sA}", f"{nB}-{sB}", ABCD[3].max(), opt) #sRlU
     return ABCD
 
 #from numpy import concatenate, zeros, linspace, transpose, array, savetxt
@@ -894,13 +912,53 @@ def weightmatrix(m, n, d):
 ## extract interactions
 ################################################################################
 
+class links(object):
+    def __init__(self, aSeq, aType, bSeq, bType, ai, aj, bi, bj, peak, mfe, structure, RNA, a_mfe, a_structure, b_mfe, b_structure, free_mfe, free_structure, alen, blen, distance):
+        self.aSeq           = aSeq
+        self.aType          = aType
+        self.ai             = int(ai)
+        self.aj             = int(aj)
+        self.bSeq           = bSeq
+        self.bType          = bType
+        self.bi             = int(bi)
+        self.bj             = int(bj)
+        self.peak           = round(peak,2)
+        self.distance       = int(distance)
+        self.sp_mean        = float('nan')
+        self.sp_min         = float('nan')
+        self.sp_max         = float('nan')
+        self.sp_median      = float('nan')
+        self.mfe            = round(mfe,2)
+        self.RNA            = RNA
+        self.structure      = structure
+        self.a_mfe          = round(a_mfe,2)
+        self.a_structure    = a_structure
+        self.a_mean         = float('nan')
+        self.a_min          = float('nan')
+        self.a_max          = float('nan')
+        self.a_median       = float('nan')
+        self.b_mfe          = round(b_mfe,2)
+        self.b_structure    = b_structure
+        self.b_mean         = float('nan')
+        self.b_min          = float('nan')
+        self.b_max          = float('nan')
+        self.b_median       = float('nan')
+        self.free_mfe       = round(free_mfe,2)
+        self.free_structure = free_structure
+        self.alen           = int(alen)
+        self.blen           = int(blen)
+    def plot(self, sep, extended=False):
+        bio = ["sp_mean","sp_min","sp_max","sp_median","a_mean","a_min","a_max","a_median","b_mean","b_min","b_max","b_median",]
+        ldat = sep.join([f"{var}" for key,var in vars(self).items() if not (not extended and key in bio)])
+        return ldat
+
 def extractCandidates(heat_dict, data_dict, cand_list, **opt):
     ## create matrix and extract candidates
     if opt["var_plh"]:
         var_pfx = opt["var_pfx"]
         opt["var_pfx"] = os.path.join(var_pfx, "cand_plots")
         makeDir(**opt)
-    c_list, cnd_list = list(), list(set([(c[0],c[1]) for c in cand_list]))
+    c_list, mplot_list, cnd_list = list(), list(), list(set([((lk.aSeq,lk.aType),(lk.bSeq,lk.bType)) for lk in cand_list]))
     pool_list = [(nA, sA, data_dict[(nA,sA.split("-")[0])],
                   nB, sB, data_dict[(nB,sB.split("-")[0])],
                   cbmat, opt) 
@@ -911,21 +969,31 @@ def extractCandidates(heat_dict, data_dict, cand_list, **opt):
         if opt["var_cdp"]:
             with mp.Pool(processes=opt["var_thr"]) as p:
                 p_list = p.starmap(extractCandidatesMulti, pool_list)
-            c_list = [c for c_list in p_list for c in c_list]
+            for clist,mplot in p_list:
+                mplot_list.append(mplot)
+                for c in clist:
+                    c_list.append(c)
         else:
             for tup in pool_list:
-                c_list.extend(extractCandidatesMulti(*tup))
+                clist,mplot = extractCandidatesMulti(*tup)
+                mplot_list.append(mplot)
+                for c in clist:
+                    c_list.append(c)
         cand_list.extend(c_list)
+    ## plot candidates
+    if opt["var_plh"] and not opt["var_plp"]:
+        for mplot in mplot_list:
+            plotMatricesMulti(*mplot)
     ## remove duplicates
     if opt["var_tra"]:
         new_cand, cont_list = list(), list()
-        for ((nA,sA), (nB,sB), ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n) in cand_list:
-            if (nA,sA) == (nB,sB):
-                if (nB,sB,nA,sA,bi,bj,ai,aj) not in cont_list:
-                    new_cand.append(((nA,sA), (nB,sB), ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n))
-                    cont_list.append((nA,sA,nB,sB,ai,aj,bi,bj))
+        for lk in cand_list:
+            if (lk.aSeq,lk.aType) == (lk.bSeq,lk.bType):
+                if (lk.bSeq,lk.bType,lk.aSeq,lk.aType,lk.bi,lk.bj,lk.ai,lk.aj) not in cont_list:
+                    new_cand.append(lk)
+                    cont_list.append((lk.aSeq,lk.aType,lk.bSeq,lk.bType,lk.ai,lk.aj,lk.bi,lk.bj))
             else:
-                new_cand.append(((nA,sA), (nB,sB), ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n))
+                new_cand.append(lk)
         cand_list = new_cand
     if opt["var_plh"]: opt["var_pfx"] = var_pfx
     return cand_list
@@ -939,7 +1007,9 @@ def extractCandidatesMulti(nA, sA, RNAa, nB, sB, RNAb, cbmat, opt):
     RNAb_df = [j for j in list(range(n))*m]
     df = [(cen,ai,bj) for cen,ai,bj in zip(cen_df,RNAa_df,RNAb_df) if cen <= opt["var_clb"]]
     clusts, cmat = makeClusters(sorted(df), cbmat, **opt)
+    plm = opt["var_plm"]
     for it,(cen,ai,aj,bi,bj) in enumerate(clusts):
+        aj, bj = aj+1, bj+1 # added +1
         RNA = f"{RNAa[ai:aj]}&{RNAb[bi:bj]}"
         aRNA, bRNA = RNA.split("&")
         if len(aRNA) < opt["var_cdm"] or len(bRNA) < opt["var_cdm"]: continue
@@ -949,16 +1019,15 @@ def extractCandidatesMulti(nA, sA, RNAa, nB, sB, RNAb, cbmat, opt):
         if mfe > opt["var_cdc"]: continue
         aRNA, bRNA = RNA.split("&")
         if len(aRNA) < opt["var_cdm"] or len(bRNA) < opt["var_cdm"]: continue
-        if opt["var_cds"]:
-            amfe, apat = doCofold(aRNA, len(aRNA)*".", **opt)
-            bmfe, bpat = doCofold(bRNA, len(bRNA)*".", **opt)
-        else:
-            apat, bpat, amfe, bmfe = ".", ".", 0.0, 0.0
-        c_list.append(((nA,sA), (nB,sB), ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n))
-    if opt["var_plh"]:
-        cbmat, os.path.join(opt["var_pfx"], f"{nA}-{sA}_{nB}-{sB}"), f"{nA} {sA}", f"{nB} {sB}", opt
-        plotMatricesMulti(cmat, os.path.join(opt["var_pfx"], f"{nA}-{sA}_{nB}-{sB}"), f"{nA} {sA}", f"{nB} {sB}", opt)
-    return c_list
+        amfe, apat = doCofold(aRNA, len(aRNA)*".", **opt)
+        bmfe, bpat = doCofold(bRNA, len(bRNA)*".", **opt)
+        if bi >= ai: distance = bi - aj + 1
+        else: distance = ai - bj # removed +1
+        lk = links(nA, sA, nB, sB, ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n, distance)
+        c_list.append(lk)
+    if opt["var_plh"] and opt["var_plp"]:
+        plotMatricesMulti(cmat, os.path.join(opt["var_pfx"], f"{nA}-{sA}_{nB}-{sB}"), f"{nA} {sA}", f"{nB} {sB}", plm, opt)
+    return c_list, (cmat, os.path.join(opt["var_pfx"], f"{nA}-{sA}_{nB}-{sB}"), f"{nA} {sA}", f"{nB} {sB}", plm, opt)
 
 def makeClusters(df, cbmat, **opt):
     ## cluster and split mfe points according to mfe
@@ -1038,13 +1107,19 @@ def saveCandidates(cand_list, **opt):
     if opt["var_nex"] == "mfe":  ext += f"_mfe{opt['var_cdc']}"
     if opt["var_tra"]:           ext += "_intra"
     with open(os.path.join(opt["var_pfx"], f"{os.path.basename(opt['var_pfx'])}{ext}.tsv"), "w") as wrt:
-        if opt["var_sql"]: ehd = f"\talen\tblen"
-        wrt.write(f"aSeq\tai\taj\tbSeq\tbi\tbj\tpeak\tsp_mean\tsp_min\tsp_max\tmfe\tRNA\tstructure\ta_mfe\ta_structure\tb_mfe\tb_structure\tfree_mfe\tfree_structure{ehd}\n")
-        for (nA,sA), (nB,sB), ai, aj, bi, bj, cen, smean, smin, smax, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n in cand_list:
-            if opt["var_rvp"]: ai, aj, bi, bj = m-ai-1, m-aj+1, n-bi-1, n-bj+1
-            if smean != "-": smean, smin, smax = f"{smean:.2f}", f"{smin:.2f}", f"{smax:.2f}"
-            if opt["var_sql"]: end = f"\t{m}\t{n}"
-            wrt.write(f"{nA}-{sA}\t{ai+1}\t{aj}\t{nB}-{sB}\t{bi+1}\t{bj}\t{cen:.2f}\t{smean}\t{smin}\t{smax}\t{mfe:.2f}\t{RNA}\t{pattern}\t{amfe:.2f}\t{apat}\t{bmfe:.2f}\t{bpat}\t{fmfe:.2f}\t{fpat}{end}\n")
+        for i,lk in enumerate(cand_list):
+            if i == 0:
+                bio = ["sp_mean","sp_min","sp_max","sp_median","a_mean","a_min","a_max","a_median","b_mean","b_min","b_max","b_median",]
+                #ldat = sep.join([f"{var}" for key,var in vars(self).items() if not (not extended and key in bio)])
+                if opt["var_spd"]:
+                    wrt.write("\t".join(lk.__dict__.keys())+"\n")
+                else:
+                    wrt.write("\t".join([k for k in lk.__dict__.keys() if k not in bio])+"\n")
+            if opt["var_rvp"]:
+                lk.ai, lk.aj, lk.bi, lk.bj = lk.alen-lk.ai, lk.alen-lk.aj+1, lk.blen-lk.bi, lk.blen-lk.bj+1 # removed -1
+            else:
+                lk.ai, lk.aj, lk.bi, lk.bj = lk.ai+1, lk.aj, lk.bi+1, lk.bj
+            wrt.write(lk.plot("\t", opt["var_spd"])+"\n")
 
 def loadCandidates(**opt):
     with open(os.path.join(opt["var_pfx"], f"candidates.pcl"), "r+b") as pout:
@@ -1087,11 +1162,12 @@ def loadSPLASH(comb_list, data_dict, **opt):
                 c = float(c)
                 if opt["var_rev"]: i,j = m-int(i)-1, n-int(j)-1
                 else:              i,j = int(i), int(j)
-                if opt["var_spn"] and c > 0.0: smat[i,j] += log(c)
-                else:                          smat[i,j] += c
+                smat[i,j] += c
         # intra interactions
         if opt["var_tra"] and nA == nB:
-            smat = smat + smat.transpose()
+            tmat = smat.transpose()
+            if tmat.all() != smat.all():
+                smat = smat + tmat
         elif not opt["var_tra"] and  nA == nB:
             continue
         # save interactions
@@ -1108,19 +1184,45 @@ def loadSPLASH(comb_list, data_dict, **opt):
 def addSplash(cand_list, splash_dict, **opt):
     ## adds SPLASH data to candidate list
     new_cand = list()
-    for ((nA,sA), (nB,sB), ai, aj, bi, bj, cen, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n) in cand_list:
-        smat = splash_dict.get(((nA,sA),(nB,sB)), zeros(shape=(1,1)))
-        if smat.any():
-            s_list = list()
-            for i,j in zip(range(ai,aj),range(bi,bj)[::-1]):
-                s_list.append(smat[i,j])
-            smin, smax, smean = min(s_list), max(s_list), mean(s_list)
-            if opt["var_spn"] and opt["var_spl"] > smean: continue
-            elif not opt["var_spn"] and opt["var_spr"] > smean: continue
-            new_cand.append(((nA,sA), (nB,sB), ai, aj, bi, bj, cen, smean, smin, smax, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n))
-        else:
-            new_cand.append(((nA,sA), (nB,sB), ai, aj, bi, bj, cen, "-", "-", "-", mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n))
+    for lk in cand_list:
+        #print(nA,sA,nB,sB) = SC35M_HA mutS4 SC35M_PB2 WT
+        smat = splash_dict.get(((lk.aSeq,lk.aType.split("-")[0]),(lk.bSeq,lk.bType.split("-")[0])), zeros(shape=(1,1)))
+        amat = splash_dict.get(((lk.aSeq,lk.aType.split("-")[0]),(lk.aSeq,lk.aType.split("-")[0])), zeros(shape=(1,1)))
+        bmat = splash_dict.get(((lk.bSeq,lk.bType.split("-")[0]),(lk.bSeq,lk.bType.split("-")[0])), zeros(shape=(1,1)))
+        data = ["sp","a","b"]
+        pattern = [lk.structure,lk.a_structure,lk.b_structure]
+        mat = [smat,amat,bmat]
+        apos = [lk.ai,lk.ai,lk.bi]
+        bpos = [lk.bi,lk.ai,lk.bi]
+        for t,pat,xmat,ai,bi in zip(data, pattern, mat, apos, bpos):
+            if xmat.any():
+                s_list = list()
+                for i,j in getBasePairs(pat, ai, bi, **opt):
+                    sdat = xmat[i,j]
+                    if not isnan(sdat):
+                        s_list.append(sdat)
+                if s_list:
+                    lk.__dict__[f"{t}_min"] = round(min(s_list),3)
+                    lk.__dict__[f"{t}_max"] = round(max(s_list),3)
+                    lk.__dict__[f"{t}_mean"] = round(mean(s_list),3)
+                    lk.__dict__[f"{t}_median"] = round(median(s_list),3)
+        if opt["var_spr"] > lk.sp_mean: continue
+        new_cand.append(lk)
     return new_cand
+
+def getBasePairs(pat, ai, bi, **opt):
+    ## determine base pairing positions of the structure
+    st, bp, k, s = list(), list(), ai, 0
+    for l,x in enumerate(pat):
+        if x == "&":
+            k = bi
+            s = l+1
+        elif x == "(":
+            st.append(k+l-s)
+        elif x == ")":
+            i, j = st.pop(), k+l-s
+            bp.append((i,j))
+    return bp
 
 
 
@@ -1134,28 +1236,34 @@ def plotMatrices(heat_dict, name, **opt):
     var_pfx = opt["var_pfx"]
     opt["var_pfx"] = os.path.join(var_pfx, name)
     makeDir(**opt)
+    plm = opt["var_plm"]
     print_list = [(cbmat, os.path.join(opt["var_pfx"], f"{nA}-{sA}_{nB}-{sB}"),
-                   f"{nA} {sA}", f"{nB} {sB}", opt) 
+                   f"{nA} {sA}", f"{nB} {sB}", plm, opt) 
                    for ((nA,sA),(nB,sB)),cbmat in heat_dict.items()]
     if opt["var_plp"]:
         with mp.Pool(processes=opt["var_thr"]) as p:
             p.starmap(plotMatricesMulti, print_list)
     else:
-        for (mat,f_name,xname,yname,opt) in print_list:
-            plotMatricesMulti(mat,f_name,xname,yname,opt)
+        for (mat, f_name, xname, yname, plm, opt) in print_list:
+            plotMatricesMulti(mat, f_name, xname, yname, plm, opt)
     opt["var_pfx"] = var_pfx
 
-def plotMatricesMulti(mat, f_name, xname, yname, opt):
+def plotMatricesMulti(mat, f_name, xname, yname, plm, opt):
     ## pyplot matrix plot
+    xmat = nan_to_num(mat, copy=True)
+    if not opt["var_pln"]:
+        mat = xmat
+    if not plm:
+        plm = xmat.max()
     s = opt["var_pls"]
     n, m = mat.shape # default: 6.4, 4.8 -> 1.6 for legend
     mx = (4.8 / n) * m + 1.6
     pz = plt.figure(figsize=(mx*s,4.8*s))
     if opt["var_rvp"]: mat = flip(mat)
     if opt["var_plc"]:
-        plt.imshow(mat, cmap='viridis_r', vmin=mat.min(), vmax=opt["var_plm"], interpolation="none")
+        plt.imshow(mat, cmap='viridis_r', vmin=xmat.min(), vmax=plm, interpolation="none")
     else:
-        plt.imshow(mat, cmap='viridis', vmin=mat.min(), vmax=opt["var_plm"], interpolation="none")
+        plt.imshow(mat, cmap='viridis', vmin=xmat.min(), vmax=plm, interpolation="none")
     ax = plt.gca()
     xs, xe = ax.get_xlim()
     ys, ye = ax.get_ylim()
@@ -1183,7 +1291,7 @@ def createDistributionPlot(cand_list, data_dict, **opt):
     opt["var_pfx"] = os.path.join(var_pfx, "distribution_plots")
     makeDir(**opt)
     ## creat complete bar plot
-    peaks = [cand[6] for cand in cand_list]
+    peaks = [lk.peak for lk in cand_list]
     pd = getDistribution(peaks)
     f_name = os.path.join(opt["var_pfx"], f"complete-distribution")
     plotBarPlot(pd, f_name, **opt)
@@ -1192,8 +1300,8 @@ def createDistributionPlot(cand_list, data_dict, **opt):
         for k2 in data_dict.keys():
             if k1 == k2: continue
             cand_peaks = list()
-            for cand in cand_list:
-                c1, c2, peak = cand[0], cand[1], cand[6]
+            for lk in cand_list:
+                c1, c2, peak = (lk.aSeq,lk.aType), (lk.bSeq,lk.bType), lk.peak
                 if (k1==c1 and k2==c2) or (k1==c2 and k2==c1):
                     cand_peaks.append(peak)
             pd = getDistribution(cand_peaks)
@@ -1205,7 +1313,7 @@ def getDistribution(peaks):
     ## calculate distribution
     pd = {m:0 for m in arange(int(round(max(peaks),0)),int(round(min(peaks),0))-1,-1)}
     for p in peaks:
-        pd[int(round(p,0))] += 1
+        pd[int(round(p-0.001,0))] += 1
     return pd
 
 def plotBarPlot(pd, f_name, **opt):
@@ -1326,23 +1434,51 @@ def plotBokehMulti(nameB, strainB, RNAb, nameA, strainA, RNAa, cbmat, spmat, opt
     plt.circle("posA", "posB", fill_color={"field":"mfe", "transform":color_mapper},
                size="csize", fill_alpha=1, source=source, line_color=None)
     ## create slider
-    callback = CustomJS(args=dict(source=source), code="""
-        var mfe_val = cb_obj.value;
-        var data = source.data;
-        for (i = 0; i < data["posA"].length; i++) {
-            if (data["mfe"][i] <= mfe_val) {
-                data["csize"][i] = 8;
-            } else {
-                data["csize"][i] = 0;
-            }
-        }
-        source.change.emit();""")
-        #source.trigger("change");""")
     mlow = min(df.mfe) if not df.mfe.empty else -1.0
     mhigh = max(df.mfe) if not df.mfe.empty else 0.0
     mfe_slider = Slider(start=mlow, end=mhigh, value=mhigh, 
-                        step=0.01, title="kcal/mol", direction="rtl", 
-                        callback_policy="mouseup", callback=callback)
+                        step=0.01, title="kcal/mol", direction="rtl")
+                        #, 
+                        #callback_policy="mouseup")
+                        #, callback=callback)
+        #var mfe_val = cb_obj.value;
+    callback = CustomJS(args=dict(source=source, mfe=mfe_slider), code="""
+        var csize_data = source.data["csize"];
+        var mfe_data = source.data["mfe"]
+        var mfe_val = mfe.value;
+        for (var i = 0; i < mfe_data.length; i++) {
+            if (mfe_data[i] <= mfe_val) {
+                csize_data[i] = 8;
+            } else {
+                csize_data[i] = 0;
+            }
+        }
+        source.change.emit();
+        """)
+    #source.change.emit()
+    mfe_slider.js_on_change("value_throttled", callback)
+        #source.trigger("change");""")
+    ############################################################################
+    ### create slider
+    #callback = CustomJS(args=dict(source=source), code="""
+    #    var mfe_val = cb_obj.value;
+    #    var data = source.data;
+    #    for (i = 0; i < data["posA"].length; i++) {
+    #        if (data["mfe"][i] <= mfe_val) {
+    #            data["csize"][i] = 8;
+    #        } else {
+    #            data["csize"][i] = 0;
+    #        }
+    #    }
+    #    source.change.emit();""")
+    #    #source.trigger("change");""")
+    #mlow = min(df.mfe) if not df.mfe.empty else -1.0
+    #mhigh = max(df.mfe) if not df.mfe.empty else 0.0
+    #mfe_slider = Slider(start=mlow, end=mhigh, value=mhigh, 
+    #                    step=0.01, title="kcal/mol", direction="rtl", 
+    #                    js_event_callbacks=callback)
+    #                    #callback_policy="mouseup", callback=callback)
+    ############################################################################
     ## add weight plot option
     #weightOptions = RadioButtonGroup(labels=["no weight", f"{vRNAa} {typea}", f"{vRNAa} {typea}", f"{vRNAa} {typea}", f"{vRNAa} {typea}"], active=0)
     ## add RNA bases plot
@@ -1415,16 +1551,16 @@ def createStructures(cand_list, **opt):
     if opt["var_tra"]:           ext += "_intra"
     opt["var_pfx"] = os.path.join(var_pfx, f"varna_plots{ext}")
     makeDir(**opt)
-    pool_list = [(tup, opt) for tup in cand_list if tup[10] <= opt["var_vre"]]
+    pool_list = [(lk, opt) for lk in cand_list if lk.peak <= opt["var_vre"]]
     with mp.Pool(processes=opt["var_thr"]) as p:
         p.starmap(createStructureMulti, pool_list)
     opt["var_pfx"] = var_pfx
 
-def createStructureMulti(tup, opt):
+def createStructureMulti(lk, opt):
     ## create 2. Structures with varna
-    (nA,sA), (nB,sB), ai, aj, bi, bj, cen, smean, smin, smax, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n = tup
-    if opt["var_rvp"]: ai, aj, bi, bj = m-ai-1, m-aj+1, n-bi-1, n-bj+1
-    Aname, Bname = f"{nA}-{sA}", f"{nB}-{sB}"
+    if opt["var_rvp"]: lk.ai, lk.aj, lk.bi, lk.bj = lk.alen-lk.ai, lk.alen-lk.aj+1, lk.blen-lk.bi, lk.blen-lk.bj+1
+    Aname, Bname = f"{lk.aSeq}-{lk.aType}", f"{lk.bSeq}-{lk.bType}"
+    RNA = lk.RNA
     Rlen = len(RNA)
     hstring, x, cstring = "", 1, {"U":"#ffff00","C":"#ff0000","A":"#0000ff","G":"#00ff00"}
     for i,n in enumerate(RNA):
@@ -1438,15 +1574,15 @@ def createStructureMulti(tup, opt):
         ystring.append(f"fill=#ffffff,outline={s},label=#000000")
         pstring.append(",".join([str(i) for i,r in enumerate(RNA.replace("&",""),1) if r == b]))
     ## do varna
-    file_name = os.path.join(opt["var_pfx"], f"{Aname}_{ai+1}-{aj}_{Bname}_{bi+1}_{bj}_{mfe:.2f}")
-    title_name = f"{Aname} {ai+1}-{aj} {Bname} {bi+1}-{bj} ({mfe:.2f} kcal/mol)"
-    doVARNA(file_name, RNA, pattern, title_name, hstring, astring, ystring, pstring, 10, **opt)
+    file_name = os.path.join(opt["var_pfx"], f"{Aname}_{lk.ai+1}-{lk.aj}_{Bname}_{lk.bi+1}_{lk.bj}_{lk.mfe:.2f}")
+    title_name = f"{Aname} {lk.ai+1}-{lk.aj} {Bname} {lk.bi+1}-{lk.bj} ({lk.mfe:.2f} kcal/mol)"
+    doVARNA(file_name, RNA, lk.structure, title_name, hstring, astring, ystring, pstring, 10, **opt)
     if opt["var_vrp"] and opt["var_vrd"] and opt["var_vrf"]: svg2pdf(file_name, **opt)
     ## do single varna
     if opt["var_vrs"]:
-        file_name = os.path.join(opt["var_pfx"], f"{Aname}_{ai+1}-{aj}_{Bname}_{bi+1}_{bj}_single")
-        title_name = f"{Aname} {ai+1}-{aj} ({amfe:.2f} kcal/mol) {Bname} {bi+1}-{bj} ({bmfe:.2f} kcal/mol)"
-        pattern = f"{apat}&{bpat}"
+        file_name = os.path.join(opt["var_pfx"], f"{Aname}_{lk.ai+1}-{lk.aj}_{Bname}_{lk.bi+1}_{lk.bj}_single")
+        title_name = f"{Aname} {lk.ai+1}-{lk.aj} ({lk.a_mfe:.2f} kcal/mol) {Bname} {lk.bi+1}-{lk.bj} ({lk.b_mfe:.2f} kcal/mol)"
+        pattern = f"{lk.a_structure}&{lk.b_structure}"
         doVARNA(file_name, RNA, pattern, title_name, hstring, astring, ystring, pstring, 10, **opt)
         if opt["var_vrp"] and opt["var_vrd"] and opt["var_vrf"]: svg2pdf(file_name, **opt)
 
@@ -1501,27 +1637,63 @@ def createCircosData(cand_list, data_dict, **opt):
     if opt["var_nex"] == "mfe":   ext += f"_mfe{opt['var_cim']}"
     if opt["var_cit"] == "inter": ext += f"_inter"
     if opt["var_cit"] == "intra": ext += f"_intra"
+    ## do mutant plots
+    if opt["var_ciu"]:
+        mutant_seq_circos = [(m.split(",")[0]) for m in opt["var_ciu"].split(";")]
+        mutant_typ_circos = [(m.split(",")[1]) for m in opt["var_ciu"].split(";")]
+        mutant_circos = {m.split(",")[0]:m.split(",")[1] for m in opt["var_ciu"].split(";")}
+        mnameext = "-".join(mutant_typ_circos)
+        ext += f"_{mnameext}"
+        mutant_typ_circos.append("WT")
+    if opt["var_cir"] and len(opt["var_cir"].split("-")) == 3:
+        rSeq, rStart, rEnd = opt["var_cir"].split("-")
+        ext += f"_{rSeq}-{rStart}-{rEnd}"
     opt["var_pfx"] = os.path.join(var_pfx, f"circos_plots{ext}")
     makeDir(**opt)
     karyo_file = os.path.join(var_pfx, "circos_karyo.tsv")
     bands_file = os.path.join(var_pfx, "circos_bands.tsv")
     # sort segments
-    seg_dict = {k:v for k,v in sorted({(n,s):len(r) for (n,s),r in data_dict.items() if s == "WT"}.items(), key=operator.itemgetter(1), reverse=True)}
+    segs_dict = {k:v for k,v in sorted({(n,s):len(r) for (n,s),r in data_dict.items() if s == "WT"}.items(), key=operator.itemgetter(1), reverse=True)}
+    seg_dict = dict()
+    if opt["var_ciu"]:
+        for (k,v),l in segs_dict.items():
+            if k in mutant_circos.keys():
+                seg_dict[(k,mutant_circos[k])] = l
+            else:
+                seg_dict[(k,v)] = l
+    else:
+        seg_dict = segs_dict
     # prepare data
     cover_dict = {(n,s):[0 for i in range(r)] for (n,s),r in seg_dict.items()}
     link_list = list()
-    for ((nA,sA), (nB,sB), ai, aj, bi, bj, cen, smean, smin, smax, mfe, pattern, RNA, amfe, apat, bmfe, bpat, fmfe, fpat, m, n) in cand_list:
-        if sA.split("-")[0] != "WT" or len(sA.split("-")) > 1 or sB.split("-")[0] != "WT" \
-        or len(sB.split("-")) > 1 or cen > opt["var_cie"] or mfe > opt["var_cim"] \
-        or (opt["var_cit"] == "intra" and nA != nB) or (opt["var_cit"] == "inter" and nA == nB): continue
-        if opt["var_cir"] and len(opt["var_cir"].split("-")) == 2:
-            start, end = [int(i) for i in opt["var_cir"].split("-")]
-            if (aj < start or ai > end) and (bj < start or bi > end): continue
+    for lk in cand_list:
+        if opt["var_ciu"]:
+            if lk.aType.split("-")[0] == "WT" and lk.aSeq in mutant_seq_circos: continue
+            if lk.bType.split("-")[0] == "WT" and lk.bSeq in mutant_seq_circos: continue
+            if lk.aType.split("-")[0] not in mutant_typ_circos: continue
+            if lk.bType.split("-")[0] not in mutant_typ_circos: continue
+        else:
+            if lk.aType.split("-")[0] != "WT" or lk.bType.split("-")[0] != "WT": continue
+        if len(lk.aType.split("-")) > 1 or len(lk.bType.split("-")) > 1: continue
+        if lk.peak > opt["var_cie"] or lk.mfe > opt["var_cim"]: continue
+        if (opt["var_cit"] == "intra" and lk.aSeq != lk.bSeq): continue
+        if (opt["var_cit"] == "inter" and lk.aSeq == lk.bSeq): continue
+        if opt["var_cir"] and len(opt["var_cir"].split("-")) == 3:
+            rSeq, rStart, rEnd = opt["var_cir"].split("-")
+            rStart, rEnd = int(rStart), int(rEnd)
+            if opt["var_rev"]:
+                if rSeq == lk.aSeq: rStart, rEnd = lk.alen-rEnd, lk.alen-rStart
+                if rSeq == lk.bSeq: rStart, rEnd = lk.blen-rEnd, lk.blen-rStart
+            else:
+                rStart, rEnd = rStart-1, rEnd-1
+            if lk.aSeq == rSeq and (lk.aj < rStart or lk.ai > rEnd): continue
+            if lk.bSeq == rSeq and (lk.bj < rStart or lk.bi > rEnd): continue
         # create histogram data
-        for a in range(ai-1,aj): cover_dict[(nA,sA.split("-")[0])][a] += 1
-        for b in range(bi-1,bj): cover_dict[(nB,sB.split("-")[0])][b] += 1
+        # removed -1
+        for a in range(lk.ai,lk.aj): cover_dict[(lk.aSeq,lk.aType.split("-")[0])][a] += 1
+        for b in range(lk.bi,lk.bj): cover_dict[(lk.bSeq,lk.bType.split("-")[0])][b] += 1
         # create link list
-        link_list.append(((nA,sA.split("-")[0]), ai, aj, (nB,sB.split("-")[0]), bi, bj))
+        link_list.append(((lk.aSeq,lk.aType.split("-")[0]), lk.ai, lk.aj, (lk.bSeq,lk.bType.split("-")[0]), lk.bi, lk.bj))
     makeHistogram(cover_dict, **opt)
     # create colors for at least 12 segments, other will be random
     color_dict = dict()
@@ -1546,17 +1718,18 @@ def makeCircosLinks(link_list, color_dict, **opt):
     links_out = os.path.join(opt["var_pfx"], f"circos_links_all.tsv")
     with open(links_out, "w") as linkout:
         for ((nA,sA),ai,aj,(nB,sB),bi,bj) in link_list:
-            linkout.write(f"{nA}_{sA} {ai} {aj} {nB}_{sB} {bi} {bj} color={color_dict[(nA,sA)]}\n")
+            linkout.write(f"{nA}_{sA} {ai} {aj-1} {nB}_{sB} {bi} {bj-1} color={color_dict[(nA,sA)]}\n")
     ## create circos single links file
     if opt["var_cis"]:
         for (name,strain),seg in color_dict.items():
             links_out = os.path.join(opt["var_pfx"], f"circos_links_{name}_{strain}.tsv")
             with open(links_out, "w") as linkout:
                 for ((nA,sA),ai,aj,(nB,sB),bi,bj) in link_list:
+                    if opt["var_cit"] == "intra" and opt["var_cid"] > bi - aj + 1: continue
                     if (nA,sA) == (name,strain):
-                        linkout.write(f"{nA}_{sA} {ai} {aj} {nB}_{sB} {bi} {bj} color={color_dict[(nA,sA)]}\n")
+                        linkout.write(f"{nA}_{sA} {ai} {aj-1} {nB}_{sB} {bi} {bj-1} color={color_dict[(nB,sB)]}\n")
                     elif (nB,sB) == (name,strain):
-                        linkout.write(f"{nA}_{sA} {ai} {aj} {nB}_{sB} {bi} {bj} color={color_dict[(nB,sB)]}\n")
+                        linkout.write(f"{nA}_{sA} {ai} {aj-1} {nB}_{sB} {bi} {bj-1} color={color_dict[(nA,sA)]}\n")
 
 def makeHistogram(cover_dict, **opt):
     ## creates a histogram coverage file for circos

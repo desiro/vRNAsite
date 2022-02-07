@@ -56,6 +56,9 @@ description
 --dangles,-dng
     use dangling ends for foldings (default: 2) (choices: 0,1,2,3)
 
+--temperature,-tmp
+    changes the RNA folding temperature (default: 37.0)
+
 --noLP,-nlp
     disable lonely pairs for RNAcofold (default: False)
 
@@ -643,6 +646,7 @@ def doCofold(RNA, constraint, **opt):
     ## do Cofold
     cvar.dangles = opt["var_dng"]
     cvar.noLP = int(opt["var_nlp"])
+    cvar.temperature = opt["var_tmp"]
     fc = fold_compound(RNA)
     fc.constraints_add(constraint, CONSTRAINT_DB | CONSTRAINT_DB_DEFAULT)
     pattern, mfe = fc.mfe_dimer()

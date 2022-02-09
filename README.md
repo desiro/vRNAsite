@@ -18,6 +18,11 @@
 * [pandas 1.3.3](https://pandas.pydata.org/getting_started.html)
 * [Inkscape 0.92](https://inkscape.org/en/)
 
+conda install -c conda-forge pandas=1.4.0
+conda install -c conda-forge bokeh=2.4.2
+conda install -c conda-forge matplotlib=3.5.1
+conda install -c bioconda circos=0.69.6
+
 ## Installation with Miniconda
 
 Please download the [Miniconda3](https://docs.conda.io/en/latest/miniconda.html) application for your system. The following will demonstrate the installation and set up of miniconda on Linux, which should be similar on other platforms.

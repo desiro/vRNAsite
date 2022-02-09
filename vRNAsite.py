@@ -10,7 +10,7 @@ version
 
 dependencies
     Python v3.9.7, NumPy v1.22.2, Pandas v1.4.0, Bokeh v2.4.2, 
-    ViennaRNA v2.5.0, Matplotlib v3.5.1, VARNA v3.93, Circos v0.69.9
+    ViennaRNA v2.5.0, Matplotlib v3.5.1, VARNA v3.93, Circos v0.69.8
 
 description
     Predicts potential intermolecular long-range RNA-RNA interactions between 
@@ -256,7 +256,10 @@ description
 ################################################################
 
 reference
-    Reference.
+    D. Desirò, E. Barth, B. Hardin, M. Schwemmle and M. Marz.
+    "vRNAsite: prediction of packaging signals in segmented RNA viruses at the example of influenza A virus indicating flexible RNA-RNA interactions between segments."
+    In Preparation, 2022.
+    https://github.com/desiro/vRNAsite
 """
 
 import argparse as ap

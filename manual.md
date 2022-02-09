@@ -1,8 +1,10 @@
-# vRNAsite - manual
+# <samp>vRNAsite</samp> - manual
+
+***
 
 ## Usage
 ```
-vRNAsite.py -fsa <in_vRNAsite_fasta> -pfx <out_prefix> [options]
+vRNAsite.py -fsa <in_fasta> -pfx <out_prefix> [options]
 ```
 
 ## Version
@@ -11,10 +13,10 @@ vRNAsite.py 0.0.1 (alpha)
 ```
 
 ## Dependencies
-```python v3.7.1```, ```numpy v1.16.4```, ```pandas v1.3.3```, ```bokeh v2.4.0```, ```ViennaRNA v2.4.13```, ```matplotlib v3.4.3```, ```VARNA v3.93```, ```circos v0.69.8```
+```Python v3.9.7```, ```NumPy v1.22.2```, ```Pandas v1.4.0```, ```Bokeh v2.4.2```, ```ViennaRNA v2.5.0```, ```Matplotlib v3.5.1```, ```VARNA v3.93```, ```Circos v0.69.8```
 
 ## Description
-```vRNAsite``` can predict long-range RNA-RNA interaction between any two or more RNA sequences. The tool has been written in ```Python 3.7.1``` and relies heavily on the ```RNAcofold``` python site-package of the ```ViennaRNA Package 2.4.13```.
+<samp>vRNAsite</samp> predicts potential intermolecular long-range RNA-RNA interactions between two or more RNA sequences. Can also be applied to predict intramolecular long-range RNA-RNA interactions. The tool predicts short consecutive stable interactions. Example call: python vRNAsite.py -pfx example -fsa example.fa -thr 4 -ovr -rev -cmp -rvp -nex peak -clp -10.0 -thr 4
 
 ## Options
 
@@ -57,6 +59,9 @@ vRNAsite.py 0.0.1 (alpha)
 
 --dangles,-dng
     use dangling ends for foldings (default: 2) (choices: 0,1,2,3)
+
+--temperature,-tmp
+    changes the RNA folding temperature (default: 37.0)
 
 --noLP,-nlp
     disable lonely pairs for RNAcofold (default: False)
@@ -242,16 +247,27 @@ vRNAsite.py 0.0.1 (alpha)
     create plots for every segment (default: False)
 
 -circosIntraInter,-cit
-    specify the interaction type which should be shown with circos (default: all) (choices: all,intra,inter)
+    specify the interaction type which should be shown with circos (default: all) 
+    (choices: all,intra,inter)
 
 -circosIntraDist,-cid
     define the minimum distance of intra circos intreactions (default: 10)
 
 --circosRange,-cir
-    set circos position plot range; sequence, start and end position has to be
-    divided by a minus symbol (default: )
+    set circos position plot range for one sequence; sequence name, start and 
+    end position has to be divided by a minus symbol; e.g. <name>-<start>-<end> 
+    (default: )
 
 --circosMutants,-ciu
-    create mutant circos plots; the mutant segments can be defined by this parameter;
-    sequenes and type have to be separated by a comma, multiple mutants by semicolon (default: )
+    create mutant circos plots; the mutant segments can be defined by this 
+    parameter; sequences name and mutant name have to be separated by a comma, 
+    multiple mutants by semicolon; e.g. <name1>,<mut1>;<name2>,<mut2> (default: )
+```
+
+## References
+```
+D. Desirò, E. Barth, B. Hardin, M. Schwemmle and M. Marz.
+"vRNAsite: prediction of packaging signals in segmented RNA viruses at the example of influenza A virus indicating flexible RNA-RNA interactions between segments."
+In Preparation, 2022.
+https://github.com/desiro/vRNAsite
 ```

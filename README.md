@@ -126,6 +126,6 @@ Please cite <samp>vRNAsite</samp> if you find our tool useful.
 
 ```
 D. Desirò, E. Barth, B. Hardin, M. Schwemmle and M. Marz.
-"vRNAsite: prediction of packaging signals in segmented RNA viruses at the example of influenza A virus indicating flexible RNA-RNA interactions between segments."
+"vRNAsite: Prediction of packaging signals in segmented RNA viruses at the example of influenza A virus indicating flexible RNA-RNA interactions between segments."
 In Preparation, 2022.
 ```

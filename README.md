@@ -7,7 +7,7 @@
 
 ## Description
 
-This tool predicts potential intermolecular long-range RNA-RNA interactions between two or more RNA sequences. Can also be applied to predict intramolecular long-range RNA-RNA interactions. The tool predicts short consecutive stable interactions.
+This tool predicts potential intermolecular long-range RNA-RNA interactions between two or more RNA sequences. It can also be applied to predict intramolecular long-range RNA-RNA interactions. The tool predicts short consecutive stable interactions.
 
 ### Mandatory Prerequisites
 

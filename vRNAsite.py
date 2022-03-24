@@ -324,7 +324,7 @@ def main(opt):
     ## create WT / mutant combinations
     print(f"Status: Create WT / mutant combinations ...")
     comb_list = defineCombinations(data_dict, **opt)
-    time_s, opt["var_tem"] = getTime(time_s, f"Create WT / mutant combinations"), 46
+    time_s, opt["var_tem"] = getTime(time_s, f"Create WT / mutant combinations"), 50
     ############################################################################
     if opt["var_mat"] or opt["var_opl"]:
         ## load matrices

@@ -324,7 +324,7 @@ def main(opt):
     ## create WT / mutant combinations
     print(f"Status: Create WT / mutant combinations ...")
     comb_list = defineCombinations(data_dict, **opt)
-    time_s = getTime(time_s, f"Create WT / mutant combinations")
+    time_s, opt["var_tem"] = getTime(time_s, f"Create WT / mutant combinations"), 46
     ############################################################################
     if opt["var_mat"] or opt["var_opl"]:
         ## load matrices
@@ -612,7 +612,7 @@ def combineSnippets(comb_list, data_dict, snip_dict, mut_dict, **opt):
 def foldCombinations(fold_list, data_dict, **opt):
     ## fold combinations
     res_map, res_list = list(), mp.Manager().list()
-    thr, opt["var_tem"], total = opt["var_thr"], 10, len(fold_list)
+    thr, total = opt["var_thr"], len(fold_list)
     split = total//thr
     if split:
         in_split = [(s,s+split) for s in range(0,total,split)]

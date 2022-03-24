@@ -612,7 +612,7 @@ def combineSnippets(comb_list, data_dict, snip_dict, mut_dict, **opt):
 def foldCombinations(fold_list, data_dict, **opt):
     ## fold combinations
     res_map, res_list = list(), mp.Manager().list()
-    thr, total = opt["var_thr"], len(fold_list)
+    thr, opt["var_tem"], total = opt["var_thr"], 10, len(fold_list)
     split = total//thr
     if split:
         in_split = [(s,s+split) for s in range(0,total,split)]
@@ -1725,6 +1725,16 @@ def createCircosData(cand_list, data_dict, **opt):
             circosConfig(f"{name}_{strain}", num_colors, **opt)
             doCircos(f"{name}_{strain}", **opt)
     opt["var_pfx"] = var_pfx
+
+def doCofold(RNA, constraint, **opt):
+    ## do Cofold
+    cvar.dangles = opt["var_dng"]
+    cvar.noLP = int(opt["var_nlp"])
+    cvar.temperature = opt["var_tem"]
+    fc = fold_compound(RNA)
+    fc.constraints_add(constraint, CONSTRAINT_DB | CONSTRAINT_DB_DEFAULT)
+    pattern, mfe = fc.mfe_dimer()
+    return mfe, pattern
 
 def makeCircosLinks(link_list, color_dict, **opt):
     ## create circos all links file
